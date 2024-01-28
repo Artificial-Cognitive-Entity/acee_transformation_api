@@ -2,8 +2,10 @@ from flask import Flask, request, jsonify, abort
 from endpoints import *
 import functools
 import logging
+from errors import BucketAccessError, DataProcessingError
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
 
 # BUILD
 # sudo docker build -t acee_transformation_api .
@@ -19,5 +21,18 @@ def process_bucket_object():
     bucket_object = get_bucket_object(object_name)
     return bucket_object
 
+@app.route('/test', methods=['GET'])
+def tests():
+    return "hello there"
 
+#? ERROR HANDLING
 
+@app.errorhandler(BucketAccessError)
+def handle_bucket_access_error(error):
+    logging.error(f"BucketAccessError: {error}")
+    return jsonify({"error": str(error)}), 500
+
+@app.errorhandler(DataProcessingError)
+def handle_data_processing_error(error):
+    logging.error(f"DataProcessingError: {error}")
+    return jsonify({"error": str(error)}), 500
